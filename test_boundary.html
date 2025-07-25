@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>边界测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .test-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .error {
+            background: #ffe8e8;
+            color: #c00;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>贪吃蛇游戏边界测试</h1>
+        <p>这个页面用于测试游戏边界计算是否正确。</p>
+        
+        <button onclick="testBoundary()">测试边界计算</button>
+        <button onclick="testCanvas()">测试画布大小</button>
+        <button onclick="testGrid()">测试网格计算</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, isError = false) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = 'result' + (isError ? ' error' : '');
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        function testBoundary() {
+            log('=== 边界测试开始 ===');
+            
+            // 模拟不同的屏幕尺寸
+            const testSizes = [
+                {width: 375, height: 667},  // iPhone 6/7/8
+                {width: 414, height: 896},  // iPhone X/11
+                {width: 768, height: 1024}, // iPad
+                {width: 1920, height: 1080} // Desktop
+            ];
+            
+            testSizes.forEach(size => {
+                log(`测试屏幕尺寸: ${size.width} x ${size.height}`);
+                
+                // 模拟游戏容器高度（减去方向键区域）
+                const gameHeight = size.height - 200;
+                
+                // 计算方块大小
+                const minDimension = Math.min(size.width, gameHeight);
+                const blockSize = Math.floor(minDimension / 25);
+                
+                // 计算游戏网格
+                const width = Math.floor(size.width / blockSize);
+                const height = Math.floor(gameHeight / blockSize);
+                
+                log(`  方块大小: ${blockSize}`);
+                log(`  游戏网格: ${width} x ${height}`);
+                log(`  最大位置: X=${width-1}, Y=${height-1}`);
+                
+                // 验证边界
+                const maxX = width - 1;
+                const maxY = height - 1;
+                
+                // 检查是否超出边界
+                if (maxX >= width || maxY >= height) {
+                    log(`  ❌ 边界错误: 最大位置超出网格范围`, true);
+                } else {
+                    log(`  ✅ 边界正确`);
+                }
+                
+                // 检查画布大小匹配
+                const expectedCanvasWidth = width * blockSize;
+                const expectedCanvasHeight = height * blockSize;
+                
+                if (expectedCanvasWidth > size.width || expectedCanvasHeight > gameHeight) {
+                    log(`  ❌ 画布大小错误: 计算出的画布超出屏幕`, true);
+                } else {
+                    log(`  ✅ 画布大小正确: ${expectedCanvasWidth} x ${expectedCanvasHeight}`);
+                }
+                
+                log('---');
+            });
+        }
+
+        function testCanvas() {
+            log('=== 画布测试开始 ===');
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置画布大小
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight - 200;
+            
+            canvas.width = screenWidth;
+            canvas.height = screenHeight;
+            
+            log(`实际画布大小: ${canvas.width} x ${canvas.height}`);
+            log(`屏幕尺寸: ${screenWidth} x ${screenHeight}`);
+            
+            // 测试绘制边界
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制边界线
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height);
+            
+            // 计算网格
+            const minDimension = Math.min(screenWidth, screenHeight);
+            const blockSize = Math.floor(minDimension / 25);
+            const width = Math.floor(screenWidth / blockSize);
+            const height = Math.floor(screenHeight / blockSize);
+            
+            log(`计算出的网格: ${width} x ${height}`);
+            log(`方块大小: ${blockSize}`);
+            
+            // 绘制网格线
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= width; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * blockSize, 0);
+                ctx.lineTo(i * blockSize, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let i = 0; i <= height; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * blockSize);
+                ctx.lineTo(canvas.width, i * blockSize);
+                ctx.stroke();
+            }
+            
+            // 显示画布
+            document.body.appendChild(canvas);
+            canvas.style.border = '2px solid black';
+            canvas.style.margin = '20px';
+        }
+
+        function testGrid() {
+            log('=== 网格测试开始 ===');
+            
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight - 200;
+            
+            const minDimension = Math.min(screenWidth, screenHeight);
+            const blockSize = Math.floor(minDimension / 25);
+            const width = Math.floor(screenWidth / blockSize);
+            const height = Math.floor(screenHeight / blockSize);
+            
+            log(`屏幕: ${screenWidth} x ${screenHeight}`);
+            log(`方块: ${blockSize}`);
+            log(`网格: ${width} x ${height}`);
+            
+            // 测试边界位置
+            const testPositions = [
+                {x: 0, y: 0, name: '左上角'},
+                {x: width-1, y: 0, name: '右上角'},
+                {x: 0, y: height-1, name: '左下角'},
+                {x: width-1, y: height-1, name: '右下角'},
+                {x: Math.floor(width/2), y: Math.floor(height/2), name: '中心'},
+                {x: width, y: height, name: '超出边界'}
+            ];
+            
+            testPositions.forEach(pos => {
+                const isValid = pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height;
+                const pixelX = pos.x * blockSize;
+                const pixelY = pos.y * blockSize;
+                
+                log(`${pos.name}: (${pos.x}, ${pos.y}) -> 像素(${pixelX}, ${pixelY}) ${isValid ? '✅' : '❌'}`);
+            });
+        }
+    </script>
+</body>
+</html> 
